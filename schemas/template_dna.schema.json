@@ -1,0 +1,343 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TemplateDNA",
+  "description": "模板DNA - 从PPTX模板中提取的完整设计规范，包含尺寸、主题、版式、母版和装饰等全部信息",
+  "type": "object",
+  "required": ["slide_width", "slide_height", "theme", "layouts", "masters", "decorations"],
+  "additionalProperties": false,
+  "properties": {
+    "slide_width": {
+      "type": "number",
+      "description": "幻灯片宽度（EMU单位），标准16:9为12192000",
+      "minimum": 0
+    },
+    "slide_height": {
+      "type": "number",
+      "description": "幻灯片高度（EMU单位），标准16:9为6858000",
+      "minimum": 0
+    },
+    "theme": {
+      "$ref": "#/definitions/ThemeSpec",
+      "description": "主题规范 - 包含颜色方案和字体方案"
+    },
+    "layouts": {
+      "type": "array",
+      "description": "幻灯片版式列表（扁平化，可能包含来自不同母版的版式）",
+      "items": {
+        "$ref": "#/definitions/LayoutSpec"
+      }
+    },
+    "masters": {
+      "type": "array",
+      "description": "幻灯片母版列表",
+      "items": {
+        "$ref": "#/definitions/MasterSpec"
+      }
+    },
+    "decorations": {
+      "type": "array",
+      "description": "顶层装饰元素列表（不属于特定版式的全局装饰）",
+      "items": {
+        "$ref": "#/definitions/DecorationSpec"
+      }
+    },
+    "media": {
+      "type": "object",
+      "description": "模板中的媒体资源映射（key为关系ID，value为资源路径或Base64）",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "Rect": {
+      "type": "object",
+      "description": "矩形区域，使用EMU坐标",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "左上角X坐标（EMU）"
+        },
+        "y": {
+          "type": "number",
+          "description": "左上角Y坐标（EMU）"
+        },
+        "w": {
+          "type": "number",
+          "description": "宽度（EMU）",
+          "minimum": 0
+        },
+        "h": {
+          "type": "number",
+          "description": "高度（EMU）",
+          "minimum": 0
+        }
+      }
+    },
+    "ThemeSpec": {
+      "type": "object",
+      "description": "主题规范 - 包含颜色方案和字体方案",
+      "required": ["name", "colors", "fonts"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "主题名称"
+        },
+        "colors": {
+          "type": "object",
+          "description": "颜色方案映射，key为语义角色（如 primary, secondary, accent, background, text, light_bg, subtle），value为十六进制颜色值",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "description": "字体方案映射，key为语义角色（如 title, body, mono），value为字体名称",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "raw_theme_xml_path": {
+          "type": ["string", "null"],
+          "description": "原始theme XML文件在PPTX包中的路径"
+        }
+      }
+    },
+    "PlaceholderSpec": {
+      "type": "object",
+      "description": "占位符规范 - 描述版式中一个占位符的完整属性",
+      "required": ["id", "ph_type", "rect"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "占位符唯一标识"
+        },
+        "ph_type": {
+          "type": "string",
+          "description": "占位符类型，对应OOXML的ph type属性",
+          "enum": [
+            "title",
+            "ctrTitle",
+            "subTitle",
+            "body",
+            "dt",
+            "sldNum",
+            "ftr",
+            "hdr",
+            "obj",
+            "chart",
+            "tbl",
+            "clipArt",
+            "dgm",
+            "media",
+            "sldImg",
+            "pic",
+            ""
+          ]
+        },
+        "rect": {
+          "$ref": "#/definitions/Rect",
+          "description": "占位符的位置和尺寸"
+        },
+        "max_chars": {
+          "type": ["integer", "null"],
+          "description": "该占位符建议的最大字符数",
+          "minimum": 0
+        },
+        "layout_id": {
+          "type": "string",
+          "description": "所属版式的ID"
+        },
+        "idx": {
+          "type": ["integer", "null"],
+          "description": "占位符索引号",
+          "minimum": 0
+        },
+        "text_style": {
+          "type": "object",
+          "description": "文本样式属性（字体、大小、颜色、对齐等）",
+          "additionalProperties": true
+        },
+        "shape_style": {
+          "type": "object",
+          "description": "形状样式属性（填充、边框、效果等）",
+          "additionalProperties": true
+        },
+        "priority": {
+          "type": "integer",
+          "description": "内容填充优先级，数值越高越优先填充",
+          "minimum": 0
+        },
+        "semantic_roles": {
+          "type": "array",
+          "description": "该占位符可承载的语义角色列表",
+          "items": {
+            "type": "string",
+            "enum": [
+              "title",
+              "subtitle",
+              "body",
+              "bullet",
+              "caption",
+              "footer",
+              "header",
+              "slide_number",
+              "date",
+              "image",
+              "chart",
+              "table",
+              "diagram",
+              "note"
+            ]
+          }
+        }
+      }
+    },
+    "DecorationSpec": {
+      "type": "object",
+      "description": "装饰元素规范 - 描述模板中的非占位符装饰性形状",
+      "required": ["id", "source", "shape_type", "rect", "apply_to"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "装饰元素唯一标识"
+        },
+        "source": {
+          "type": "string",
+          "description": "装饰元素的来源层级",
+          "enum": ["master", "layout", "slide"]
+        },
+        "shape_type": {
+          "type": "string",
+          "description": "形状类型名称（如 rect, oval, line, picture 等）"
+        },
+        "rect": {
+          "$ref": "#/definitions/Rect",
+          "description": "装饰元素的位置和尺寸"
+        },
+        "apply_to": {
+          "type": "array",
+          "description": "该装饰元素应应用到的幻灯片类型或ID列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "xml_fragment": {
+          "type": "string",
+          "description": "OOXML片段，用于精确还原装饰元素"
+        },
+        "media_rel_id": {
+          "type": ["string", "null"],
+          "description": "关联的媒体资源关系ID（如图片）"
+        }
+      }
+    },
+    "LayoutSpec": {
+      "type": "object",
+      "description": "版式规范 - 描述一个幻灯片版式的完整属性",
+      "required": ["id", "name", "layout_type", "placeholders"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "版式唯一标识"
+        },
+        "name": {
+          "type": "string",
+          "description": "版式名称"
+        },
+        "layout_type": {
+          "type": "string",
+          "description": "版式类型分类",
+          "enum": [
+            "cover",
+            "bullet_list",
+            "two_column",
+            "chart",
+            "table",
+            "image_grid",
+            "architecture",
+            "summary",
+            "discussion",
+            "blank",
+            "title_only",
+            "section_header",
+            "comparison",
+            "content_with_caption",
+            "picture_with_caption",
+            ""
+          ]
+        },
+        "placeholders": {
+          "type": "array",
+          "description": "该版式包含的占位符列表",
+          "items": {
+            "$ref": "#/definitions/PlaceholderSpec"
+          }
+        },
+        "source_xml_path": {
+          "type": "string",
+          "description": "原始layout XML文件在PPTX包中的路径"
+        },
+        "decorations": {
+          "type": "array",
+          "description": "该版式特有的装饰元素列表",
+          "items": {
+            "$ref": "#/definitions/DecorationSpec"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "description": "版式标签，用于匹配和筛选",
+          "items": {
+            "type": "string"
+          }
+        },
+        "score_bias": {
+          "type": "number",
+          "description": "版式评分偏置，正值表示优先使用，负值表示降低优先级"
+        }
+      }
+    },
+    "MasterSpec": {
+      "type": "object",
+      "description": "母版规范 - 描述一个幻灯片母版及其包含的版式和装饰",
+      "required": ["id", "name", "layouts", "decorations"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "母版唯一标识"
+        },
+        "name": {
+          "type": "string",
+          "description": "母版名称"
+        },
+        "layouts": {
+          "type": "array",
+          "description": "该母版包含的版式列表",
+          "items": {
+            "$ref": "#/definitions/LayoutSpec"
+          }
+        },
+        "decorations": {
+          "type": "array",
+          "description": "该母版级别的装饰元素列表",
+          "items": {
+            "$ref": "#/definitions/DecorationSpec"
+          }
+        },
+        "source_xml_path": {
+          "type": "string",
+          "description": "原始master XML文件在PPTX包中的路径"
+        }
+      }
+    }
+  }
+}

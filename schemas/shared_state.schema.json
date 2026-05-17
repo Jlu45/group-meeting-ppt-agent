@@ -1,0 +1,675 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SharedState",
+  "description": "共享状态 - 组会PPT智能体全流程的中央状态对象，贯穿文件识别、资产构建、模板提取、内容规划、渲染和验证各阶段",
+  "type": "object",
+  "required": ["user_constraints", "file_recognition", "asset_store", "slide_specs", "render_log", "validation_issues", "quality_report"],
+  "additionalProperties": false,
+  "properties": {
+    "user_constraints": {
+      "$ref": "#/definitions/UserConstraints"
+    },
+    "file_recognition": {
+      "type": "array",
+      "description": "文件识别结果列表",
+      "items": {
+        "$ref": "#/definitions/FileRecognitionResult"
+      }
+    },
+    "asset_store": {
+      "$ref": "#/definitions/AssetStore"
+    },
+    "template_dna": {
+      "oneOf": [
+        {"$ref": "#/definitions/TemplateDNA"},
+        {"type": "null"}
+      ],
+      "description": "模板DNA，未选择模板时为null"
+    },
+    "slide_specs": {
+      "type": "array",
+      "description": "幻灯片规格列表",
+      "items": {
+        "$ref": "#/definitions/SlideSpec"
+      }
+    },
+    "render_log": {
+      "type": "object",
+      "description": "渲染日志，记录渲染过程中的关键信息",
+      "additionalProperties": true
+    },
+    "validation_issues": {
+      "type": "array",
+      "description": "验证问题列表",
+      "items": {
+        "$ref": "#/definitions/ValidationIssue"
+      }
+    },
+    "quality_report": {
+      "type": "object",
+      "description": "质量报告，由QualityReporter生成",
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "UserConstraints": {
+      "type": "object",
+      "description": "用户约束 - 用户指定的PPT生成偏好和限制",
+      "required": ["author", "date", "language", "template_mode", "style_preference", "must_include", "must_exclude"],
+      "additionalProperties": false,
+      "properties": {
+        "author": {
+          "type": "string",
+          "description": "作者名称"
+        },
+        "date": {
+          "type": "string",
+          "description": "日期字符串"
+        },
+        "language": {
+          "type": "string",
+          "description": "输出语言",
+          "enum": ["zh", "en", "zh-en", "en-zh", ""]
+        },
+        "target_slide_count": {
+          "type": ["integer", "null"],
+          "description": "目标幻灯片数量",
+          "minimum": 1
+        },
+        "max_slide_count": {
+          "type": ["integer", "null"],
+          "description": "最大幻灯片数量",
+          "minimum": 1
+        },
+        "template_mode": {
+          "type": "string",
+          "description": "模板模式",
+          "enum": ["default", "custom", "none", ""]
+        },
+        "style_preference": {
+          "type": "string",
+          "description": "风格偏好",
+          "enum": ["academic", "business", "minimal", "vibrant", ""]
+        },
+        "must_include": {
+          "type": "array",
+          "description": "必须包含的内容关键词或主题",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_exclude": {
+          "type": "array",
+          "description": "必须排除的内容关键词或主题",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "FileRecognitionResult": {
+      "type": "object",
+      "description": "文件识别结果",
+      "required": ["id", "path", "filename", "extension", "base_type", "content_type", "ppt_purpose", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^frec-[0-9a-f]{8}$"
+        },
+        "path": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string",
+          "pattern": "^\\.[a-z0-9]+$"
+        },
+        "base_type": {
+          "type": "string",
+          "enum": ["document", "data", "code", "image", "literature", "presentation", "other"]
+        },
+        "content_type": {
+          "type": "string"
+        },
+        "ppt_purpose": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sequence_number": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "date": {
+          "type": ["string", "null"]
+        },
+        "version": {
+          "type": ["string", "null"]
+        },
+        "suggested_parser": {
+          "type": "string"
+        },
+        "suggested_slide_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "description": "证据 - 从源文件中提取的可追溯证据片段",
+      "required": ["id", "source_file_id", "location", "quote", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source_file_id": {
+          "type": "string",
+          "description": "关联的源文件ID"
+        },
+        "location": {
+          "type": "string",
+          "description": "证据在源文件中的位置描述（如页码、段落号）"
+        },
+        "quote": {
+          "type": "string",
+          "description": "引用的原文片段"
+        },
+        "confidence": {
+          "type": "number",
+          "description": "提取置信度",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "ContentUnit": {
+      "type": "object",
+      "description": "内容单元 - 解析后的结构化内容片段",
+      "required": ["id", "kind", "title", "summary", "details", "evidence_ids", "priority", "tags"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "description": "内容类型",
+          "enum": [
+            "text",
+            "heading",
+            "paragraph",
+            "list",
+            "table",
+            "figure",
+            "code",
+            "equation",
+            "quote",
+            "metric",
+            "methodology",
+            "result",
+            "discussion",
+            "background",
+            "conclusion"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TableAsset": {
+      "type": "object",
+      "description": "表格资产",
+      "required": ["id", "source_file_id", "title", "dataframe_ref", "columns", "row_count", "summary", "suggested_use"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source_file_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "dataframe_ref": {
+          "type": "string",
+          "description": "数据框引用路径或标识"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "row_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "summary": {
+          "type": "string"
+        },
+        "suggested_use": {
+          "type": "string"
+        }
+      }
+    },
+    "FigureAsset": {
+      "type": "object",
+      "description": "图片资产",
+      "required": ["id", "source_file_id", "path", "title", "caption", "image_type", "suggested_use"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source_file_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "image_type": {
+          "type": "string",
+          "enum": ["photo", "screenshot", "diagram", "plot", "chart_image", "render", "other"]
+        },
+        "suggested_use": {
+          "type": "string"
+        }
+      }
+    },
+    "CodeAsset": {
+      "type": "object",
+      "description": "代码资产",
+      "required": ["id", "source_file_id", "language", "purpose", "entry_points", "outputs", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source_file_id": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "MetricAsset": {
+      "type": "object",
+      "description": "指标资产 - 量化的实验/性能指标",
+      "required": ["id", "name", "evidence_ids"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "description": "指标值，可以是数字或字符串"
+        },
+        "unit": {
+          "type": ["string", "null"]
+        },
+        "baseline": {
+          "description": "基线值，用于对比"
+        },
+        "delta": {
+          "description": "与基线的差值"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SourceFile": {
+      "type": "object",
+      "description": "源文件记录",
+      "required": ["id", "path", "filename", "extension", "base_type", "content_type", "metadata"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string"
+        },
+        "base_type": {
+          "type": "string"
+        },
+        "content_type": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "AssetStore": {
+      "type": "object",
+      "description": "资产仓库 - 存储从源文件中提取的全部结构化资产",
+      "required": ["source_files", "evidences", "content_units", "tables", "figures", "code", "metrics"],
+      "additionalProperties": false,
+      "properties": {
+        "source_files": {
+          "type": "object",
+          "description": "源文件映射，key为文件ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/SourceFile"
+          }
+        },
+        "evidences": {
+          "type": "object",
+          "description": "证据映射，key为证据ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/Evidence"
+          }
+        },
+        "content_units": {
+          "type": "object",
+          "description": "内容单元映射，key为单元ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/ContentUnit"
+          }
+        },
+        "tables": {
+          "type": "object",
+          "description": "表格资产映射，key为资产ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/TableAsset"
+          }
+        },
+        "figures": {
+          "type": "object",
+          "description": "图片资产映射，key为资产ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/FigureAsset"
+          }
+        },
+        "code": {
+          "type": "object",
+          "description": "代码资产映射，key为资产ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/CodeAsset"
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "description": "指标资产映射，key为资产ID",
+          "additionalProperties": {
+            "$ref": "#/definitions/MetricAsset"
+          }
+        }
+      }
+    },
+    "Rect": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": {"type": "number"},
+        "y": {"type": "number"},
+        "w": {"type": "number", "minimum": 0},
+        "h": {"type": "number", "minimum": 0}
+      }
+    },
+    "ThemeSpec": {
+      "type": "object",
+      "required": ["name", "colors", "fonts"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "colors": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "raw_theme_xml_path": {"type": ["string", "null"]}
+      }
+    },
+    "PlaceholderSpec": {
+      "type": "object",
+      "required": ["id", "layout_id", "ph_type", "rect", "text_style", "shape_style", "priority", "semantic_roles"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "layout_id": {"type": "string"},
+        "ph_type": {"type": "string"},
+        "idx": {"type": ["integer", "null"], "minimum": 0},
+        "rect": {"$ref": "#/definitions/Rect"},
+        "text_style": {"type": "object", "additionalProperties": true},
+        "shape_style": {"type": "object", "additionalProperties": true},
+        "priority": {"type": "integer", "minimum": 0},
+        "max_chars": {"type": ["integer", "null"], "minimum": 0},
+        "semantic_roles": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "DecorationSpec": {
+      "type": "object",
+      "required": ["id", "source", "shape_type", "rect", "xml_fragment", "apply_to"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "source": {"type": "string", "enum": ["master", "layout", "slide"]},
+        "shape_type": {"type": "string"},
+        "rect": {"$ref": "#/definitions/Rect"},
+        "xml_fragment": {"type": "string"},
+        "media_rel_id": {"type": ["string", "null"]},
+        "apply_to": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "LayoutSpec": {
+      "type": "object",
+      "required": ["id", "name", "source_xml_path", "layout_type", "placeholders", "decorations", "tags", "score_bias"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "source_xml_path": {"type": "string"},
+        "layout_type": {"type": "string"},
+        "placeholders": {"type": "array", "items": {"$ref": "#/definitions/PlaceholderSpec"}},
+        "decorations": {"type": "array", "items": {"$ref": "#/definitions/DecorationSpec"}},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "score_bias": {"type": "number"}
+      }
+    },
+    "MasterSpec": {
+      "type": "object",
+      "required": ["id", "name", "source_xml_path", "layouts", "decorations"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "source_xml_path": {"type": "string"},
+        "layouts": {"type": "array", "items": {"$ref": "#/definitions/LayoutSpec"}},
+        "decorations": {"type": "array", "items": {"$ref": "#/definitions/DecorationSpec"}}
+      }
+    },
+    "TemplateDNA": {
+      "type": "object",
+      "required": ["slide_width", "slide_height", "theme", "masters", "layouts", "decorations", "media"],
+      "additionalProperties": false,
+      "properties": {
+        "slide_width": {"type": "number", "minimum": 0},
+        "slide_height": {"type": "number", "minimum": 0},
+        "theme": {"$ref": "#/definitions/ThemeSpec"},
+        "masters": {"type": "array", "items": {"$ref": "#/definitions/MasterSpec"}},
+        "layouts": {"type": "array", "items": {"$ref": "#/definitions/LayoutSpec"}},
+        "decorations": {"type": "array", "items": {"$ref": "#/definitions/DecorationSpec"}},
+        "media": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "SlideIntent": {
+      "type": "object",
+      "required": ["slide_type", "content_roles", "density", "must_have"],
+      "additionalProperties": false,
+      "properties": {
+        "slide_type": {"type": "string"},
+        "content_roles": {"type": "array", "items": {"type": "string"}},
+        "density": {"type": "string", "enum": ["sparse", "medium", "dense"]},
+        "preferred_layout": {"type": ["string", "null"]},
+        "must_have": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "SlideElementSpec": {
+      "type": "object",
+      "required": ["role", "content", "asset_ids", "required", "visual_weight"],
+      "additionalProperties": false,
+      "properties": {
+        "role": {"type": "string"},
+        "content": {"oneOf": [{"type": "string"}, {"type": "object"}]},
+        "asset_ids": {"type": "array", "items": {"type": "string"}},
+        "required": {"type": "boolean"},
+        "visual_weight": {"type": "integer", "minimum": 1, "maximum": 10}
+      }
+    },
+    "SlideSpec": {
+      "type": "object",
+      "required": ["id", "slide_type", "title", "message", "elements", "intent", "candidate_layout_ids", "speaker_notes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "slide_type": {"type": "string"},
+        "title": {"type": "string"},
+        "message": {"type": "string"},
+        "elements": {"type": "array", "items": {"$ref": "#/definitions/SlideElementSpec"}},
+        "intent": {"$ref": "#/definitions/SlideIntent"},
+        "candidate_layout_ids": {"type": "array", "items": {"type": "string"}},
+        "selected_layout_id": {"type": ["string", "null"]},
+        "speaker_notes": {"type": "string"}
+      }
+    },
+    "ValidationIssue": {
+      "type": "object",
+      "description": "验证问题 - 描述PPT验证过程中发现的一个具体问题",
+      "required": ["id", "severity", "issue_type", "message", "suggested_fix"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "问题唯一标识"
+        },
+        "severity": {
+          "type": "string",
+          "description": "严重程度",
+          "enum": ["critical", "error", "warning", "info"]
+        },
+        "slide_id": {
+          "type": ["string", "null"],
+          "description": "关联的幻灯片ID（如 slide_1）"
+        },
+        "element_id": {
+          "description": "关联的元素ID",
+          "oneOf": [
+            {"type": "string"},
+            {"type": "integer"},
+            {"type": "null"}
+          ]
+        },
+        "issue_type": {
+          "type": "string",
+          "description": "问题类型",
+          "enum": [
+            "structure",
+            "blank_slide",
+            "missing_title",
+            "text_overflow",
+            "element_overlap",
+            "margin_violation",
+            "font_too_small",
+            "font_mismatch",
+            "color_mismatch",
+            "placeholder_text",
+            "incomplete_content"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "问题描述"
+        },
+        "suggested_fix": {
+          "type": "string",
+          "description": "建议修复方案"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RenderLog",
+  "description": "渲染日志 - 记录PPT渲染过程中的关键信息，包括幻灯片数量、版式使用情况、警告、错误和绑定映射",
+  "type": "object",
+  "required": ["slide_count", "layout_usage", "warnings", "errors", "binding_map"],
+  "additionalProperties": false,
+  "properties": {
+    "slide_count": {
+      "type": "integer",
+      "description": "渲染生成的幻灯片总数",
+      "minimum": 0
+    },
+    "layout_usage": {
+      "type": "object",
+      "description": "版式使用情况映射，key为版式ID，value为使用次数",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "渲染过程中的警告信息列表",
+      "items": {
+        "$ref": "#/definitions/RenderWarning"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "渲染过程中的错误信息列表",
+      "items": {
+        "$ref": "#/definitions/RenderError"
+      }
+    },
+    "binding_map": {
+      "type": "object",
+      "description": "绑定映射，key为幻灯片ID，value为该幻灯片的占位符绑定详情",
+      "additionalProperties": {
+        "$ref": "#/definitions/SlideBinding"
+      }
+    }
+  },
+  "definitions": {
+    "RenderWarning": {
+      "type": "object",
+      "description": "渲染警告 - 非致命性问题的记录",
+      "required": ["slide_id", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "slide_id": {
+          "type": "string",
+          "description": "关联的幻灯片ID"
+        },
+        "placeholder_id": {
+          "type": ["string", "null"],
+          "description": "关联的占位符ID（如适用）"
+        },
+        "message": {
+          "type": "string",
+          "description": "警告描述"
+        },
+        "suggestion": {
+          "type": "string",
+          "description": "建议的修复方案"
+        }
+      }
+    },
+    "RenderError": {
+      "type": "object",
+      "description": "渲染错误 - 致命性问题的记录",
+      "required": ["slide_id", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "slide_id": {
+          "type": "string",
+          "description": "关联的幻灯片ID"
+        },
+        "placeholder_id": {
+          "type": ["string", "null"],
+          "description": "关联的占位符ID（如适用）"
+        },
+        "message": {
+          "type": "string",
+          "description": "错误描述"
+        },
+        "exception_type": {
+          "type": "string",
+          "description": "异常类型名称"
+        }
+      }
+    },
+    "SlideBinding": {
+      "type": "object",
+      "description": "幻灯片绑定详情 - 记录一张幻灯片的占位符与内容的绑定关系",
+      "required": ["layout_id", "bindings"],
+      "additionalProperties": false,
+      "properties": {
+        "layout_id": {
+          "type": "string",
+          "description": "使用的版式ID"
+        },
+        "bindings": {
+          "type": "object",
+          "description": "占位符绑定映射，key为占位符ID，value为绑定的元素角色或资产ID",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -28,8 +28,11 @@ Desktop.ini
 
 # Output
 output/
+.cache/
+__stdout__.json
 *.pptx
 !src/templates/default_academic.pptx
+!tests/fixtures/templates/*.pptx
 
 # Temp files
 *.tmp
@@ -47,3 +50,11 @@ htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Project documentation (not for GitHub)
+组会PPT智能体_完整方案.md
+组会PPT智能体_详细解决指导方案.md
+组会PPT智能体_问题分析与改进方案.md
+
+# Test data (large files)
+测试/

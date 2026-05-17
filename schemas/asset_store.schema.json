@@ -1,0 +1,374 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AssetStore",
+  "description": "资产仓库 - 存储从源文件中提取的全部结构化资产，包含源文件、证据、内容单元、表格、图片、代码和指标七大类",
+  "type": "object",
+  "required": ["source_files", "evidences", "content_units", "tables", "figures", "code", "metrics"],
+  "additionalProperties": false,
+  "properties": {
+    "source_files": {
+      "type": "object",
+      "description": "源文件映射，key为文件ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/SourceFile"
+      }
+    },
+    "evidences": {
+      "type": "object",
+      "description": "证据映射，key为证据ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/Evidence"
+      }
+    },
+    "content_units": {
+      "type": "object",
+      "description": "内容单元映射，key为单元ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/ContentUnit"
+      }
+    },
+    "tables": {
+      "type": "object",
+      "description": "表格资产映射，key为资产ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/TableAsset"
+      }
+    },
+    "figures": {
+      "type": "object",
+      "description": "图片资产映射，key为资产ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/FigureAsset"
+      }
+    },
+    "code": {
+      "type": "object",
+      "description": "代码资产映射，key为资产ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/CodeAsset"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "指标资产映射，key为资产ID",
+      "additionalProperties": {
+        "$ref": "#/definitions/MetricAsset"
+      }
+    }
+  },
+  "definitions": {
+    "SourceFile": {
+      "type": "object",
+      "description": "源文件记录 - 记录输入文件的基本信息和分类",
+      "required": ["id", "path", "filename", "extension", "base_type", "content_type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "源文件唯一标识"
+        },
+        "path": {
+          "type": "string",
+          "description": "文件绝对路径"
+        },
+        "filename": {
+          "type": "string",
+          "description": "文件名（含扩展名）"
+        },
+        "extension": {
+          "type": "string",
+          "description": "文件扩展名"
+        },
+        "base_type": {
+          "type": "string",
+          "description": "基础类型分类"
+        },
+        "content_type": {
+          "type": "string",
+          "description": "内容语义类型"
+        },
+        "sequence": {
+          "type": ["integer", "null"],
+          "description": "文件序号",
+          "minimum": 0
+        },
+        "metadata": {
+          "type": "object",
+          "description": "附加元数据",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "description": "证据 - 从源文件中提取的可追溯证据片段",
+      "required": ["id", "source_file_id", "location", "quote", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "证据唯一标识"
+        },
+        "source_file_id": {
+          "type": "string",
+          "description": "关联的源文件ID"
+        },
+        "location": {
+          "type": "string",
+          "description": "证据在源文件中的位置描述（如页码、段落号）"
+        },
+        "quote": {
+          "type": "string",
+          "description": "引用的原文片段"
+        },
+        "confidence": {
+          "type": "number",
+          "description": "提取置信度",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "ContentUnit": {
+      "type": "object",
+      "description": "内容单元 - 解析后的结构化内容片段",
+      "required": ["id", "kind", "title", "summary", "details", "evidence_ids", "priority", "tags"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "内容单元唯一标识"
+        },
+        "kind": {
+          "type": "string",
+          "description": "内容类型",
+          "enum": [
+            "text",
+            "heading",
+            "paragraph",
+            "list",
+            "table",
+            "figure",
+            "code",
+            "equation",
+            "quote",
+            "metric",
+            "methodology",
+            "result",
+            "discussion",
+            "background",
+            "conclusion"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "内容单元标题"
+        },
+        "summary": {
+          "type": "string",
+          "description": "内容摘要"
+        },
+        "details": {
+          "type": "array",
+          "description": "详细内容列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "description": "关联的证据ID列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "description": "优先级，数值越高越重要",
+          "minimum": 0
+        },
+        "tags": {
+          "type": "array",
+          "description": "标签列表",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TableAsset": {
+      "type": "object",
+      "description": "表格资产 - 从源文件中提取的表格数据",
+      "required": ["id", "source_file_id", "title", "dataframe_ref", "columns", "row_count", "summary", "suggested_use"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "表格资产唯一标识"
+        },
+        "source_file_id": {
+          "type": "string",
+          "description": "关联的源文件ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "表格标题"
+        },
+        "dataframe_ref": {
+          "type": "string",
+          "description": "数据框引用路径或标识"
+        },
+        "columns": {
+          "type": "array",
+          "description": "列名列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "row_count": {
+          "type": "integer",
+          "description": "行数",
+          "minimum": 0
+        },
+        "summary": {
+          "type": "string",
+          "description": "表格摘要"
+        },
+        "suggested_use": {
+          "type": "string",
+          "description": "建议用途"
+        }
+      }
+    },
+    "FigureAsset": {
+      "type": "object",
+      "description": "图片资产 - 从源文件中提取或关联的图片资源",
+      "required": ["id", "source_file_id", "path", "title", "caption", "image_type", "suggested_use"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "图片资产唯一标识"
+        },
+        "source_file_id": {
+          "type": "string",
+          "description": "关联的源文件ID"
+        },
+        "path": {
+          "type": "string",
+          "description": "图片文件路径"
+        },
+        "title": {
+          "type": "string",
+          "description": "图片标题"
+        },
+        "caption": {
+          "type": "string",
+          "description": "图片说明"
+        },
+        "image_type": {
+          "type": "string",
+          "description": "图片类型",
+          "enum": ["photo", "screenshot", "diagram", "plot", "chart_image", "render", "other"]
+        },
+        "suggested_use": {
+          "type": "string",
+          "description": "建议用途"
+        }
+      }
+    },
+    "CodeAsset": {
+      "type": "object",
+      "description": "代码资产 - 从源文件中提取的代码片段或脚本",
+      "required": ["id", "source_file_id", "language", "purpose", "entry_points", "outputs", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "代码资产唯一标识"
+        },
+        "source_file_id": {
+          "type": "string",
+          "description": "关联的源文件ID"
+        },
+        "language": {
+          "type": "string",
+          "description": "编程语言"
+        },
+        "purpose": {
+          "type": "string",
+          "description": "代码用途"
+        },
+        "entry_points": {
+          "type": "array",
+          "description": "入口点列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "description": "输出列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "summary": {
+          "type": "string",
+          "description": "代码摘要"
+        }
+      }
+    },
+    "MetricAsset": {
+      "type": "object",
+      "description": "指标资产 - 量化的实验/性能指标",
+      "required": ["id", "name", "evidence_ids"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "指标资产唯一标识"
+        },
+        "name": {
+          "type": "string",
+          "description": "指标名称"
+        },
+        "value": {
+          "description": "指标值，可以是数字或字符串",
+          "oneOf": [
+            {"type": "number"},
+            {"type": "string"},
+            {"type": "null"}
+          ]
+        },
+        "unit": {
+          "type": ["string", "null"],
+          "description": "指标单位"
+        },
+        "baseline": {
+          "description": "基线值，用于对比",
+          "oneOf": [
+            {"type": "number"},
+            {"type": "string"},
+            {"type": "null"}
+          ]
+        },
+        "delta": {
+          "description": "与基线的差值",
+          "oneOf": [
+            {"type": "number"},
+            {"type": "string"},
+            {"type": "null"}
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "description": "关联的证据ID列表",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

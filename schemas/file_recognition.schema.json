@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FileRecognitionResult",
+  "description": "文件识别结果数组，由 SmartFileRecognizer 对输入文件进行类型识别和PPT用途推断后生成",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "path", "filename", "extension", "base_type", "content_type", "ppt_purpose", "confidence"],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "唯一标识符，格式为 frec-{uuid8}"
+      },
+      "path": {
+        "type": "string",
+        "description": "文件的绝对路径"
+      },
+      "filename": {
+        "type": "string",
+        "description": "文件名（含扩展名）"
+      },
+      "extension": {
+        "type": "string",
+        "description": "文件扩展名（小写，含点号）"
+      },
+      "base_type": {
+        "type": "string",
+        "description": "基于扩展名推断的基础类型",
+        "enum": [
+          "document",
+          "markdown",
+          "text",
+          "spreadsheet",
+          "csv",
+          "json",
+          "yaml",
+          "pickle",
+          "hdf5",
+          "numpy",
+          "python",
+          "jupyter",
+          "r_script",
+          "matlab",
+          "shell",
+          "image",
+          "svg",
+          "diagram",
+          "bibtex",
+          "ris",
+          "presentation",
+          "unknown"
+        ]
+      },
+      "content_type": {
+        "type": "string",
+        "description": "基于文件名模式匹配推断的内容语义类型，如 experiment_log、weekly_report 等"
+      },
+      "ppt_purpose": {
+        "type": "string",
+        "description": "该文件在PPT生成中的用途"
+      },
+      "confidence": {
+        "type": "number",
+        "description": "识别置信度，0~1之间",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "sequence_number": {
+        "type": ["integer", "null"],
+        "description": "从文件名中提取的序号（如 01_ 开头的文件）",
+        "minimum": 0
+      },
+      "date": {
+        "type": ["string", "null"],
+        "description": "从文件名中提取的日期，格式 YYYY-MM-DD"
+      },
+      "version": {
+        "type": ["string", "null"],
+        "description": "从文件名中提取的版本号，如 v1.2"
+      },
+      "suggested_parser": {
+        "type": "string",
+        "description": "建议使用的解析器名称"
+      },
+      "suggested_slide_types": {
+        "type": "array",
+        "description": "建议生成的幻灯片类型列表",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

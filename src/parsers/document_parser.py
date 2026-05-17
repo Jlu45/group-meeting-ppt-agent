@@ -15,27 +15,7 @@ class UniversalDocumentParser:
     """通用文档解析器 - 任意格式 → Markdown"""
 
     def __init__(self, use_docling: bool = False):
-        self._markitdown = None
-        self._docling_converter = None
         self._use_docling = use_docling
-
-    @property
-    def markitdown(self):
-        if self._markitdown is None:
-            from markitdown import MarkItDown
-            self._markitdown = MarkItDown(enable_plugins=True)
-        return self._markitdown
-
-    @property
-    def docling_converter(self):
-        if self._docling_converter is None:
-            try:
-                from docling.document_converter import DocumentConverter
-                self._docling_converter = DocumentConverter()
-            except ImportError:
-                logger.warning("Docling not installed. Complex PDF parsing unavailable.")
-                return None
-        return self._docling_converter
 
     def parse(self, file_path: str) -> ParsedDocument:
         path = Path(file_path)
@@ -47,8 +27,10 @@ class UniversalDocumentParser:
 
         if ext == ".pdf":
             content = self._parse_pdf(file_path)
-        elif ext in (".docx", ".xlsx", ".pptx"):
-            content = self._parse_with_markitdown(file_path)
+        elif ext == ".docx":
+            content = self._parse_docx(file_path)
+        elif ext == ".xlsx":
+            content = self._parse_xlsx(file_path)
         elif ext in (".png", ".jpg", ".jpeg", ".bmp", ".tiff"):
             content = self._parse_image(file_path)
         elif ext in (".md", ".markdown"):
@@ -56,9 +38,9 @@ class UniversalDocumentParser:
         elif ext in (".txt", ".csv", ".json", ".yaml", ".yml"):
             content = path.read_text(encoding="utf-8")
         elif ext in (".html", ".htm"):
-            content = self._parse_with_markitdown(file_path)
+            content = self._parse_html(file_path)
         else:
-            content = self._parse_with_markitdown(file_path)
+            content = self._parse_text_fallback(file_path)
 
         logger.info(f"Parsed {file_path} -> {len(content)} chars")
         return ParsedDocument(
@@ -91,48 +73,72 @@ class UniversalDocumentParser:
         )
 
     def _parse_pdf(self, path: str) -> str:
-        if self._should_use_docling(path):
-            return self._parse_with_docling(path)
-        return self._parse_with_markitdown(path)
-
-    def _should_use_docling(self, path: str) -> bool:
-        if self._use_docling:
-            return True
-        if os.path.getsize(path) > PDF_SIZE_THRESHOLD:
-            logger.info("Large PDF detected, using Docling")
-            return True
         try:
-            preview = self._parse_with_markitdown(path)
-            if preview.count("|---|") > TABLE_MARKER_THRESHOLD:
-                logger.info("Table-heavy PDF detected, using Docling")
-                return True
-        except Exception:
-            pass
-        return False
+            import PyPDF2
+            content = ""
+            with open(path, "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                for page in reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        content += text + "\n\n"
+            return content.strip()
+        except Exception as e:
+            logger.warning(f"PyPDF2 failed, trying pdfplumber: {e}")
+            try:
+                import pdfplumber
+                with pdfplumber.open(path) as pdf:
+                    content = ""
+                    for page in pdf.pages:
+                        content += page.extract_text() + "\n\n"
+                return content.strip()
+            except Exception as e2:
+                logger.error(f"Failed to parse PDF {path}: {e2}")
+                return f"[PDF File: {Path(path).name}]"
 
-    def _parse_with_markitdown(self, path: str) -> str:
-        result = self.markitdown.convert(path)
-        return result.text_content if result else ""
+    def _parse_docx(self, path: str) -> str:
+        try:
+            from docx import Document
+            doc = Document(path)
+            content = "\n\n".join(paragraph.text for paragraph in doc.paragraphs if paragraph.text.strip())
+            return content
+        except Exception as e:
+            logger.error(f"Failed to parse DOCX {path}: {e}")
+            return f"[DOCX File: {Path(path).name}]"
 
-    def _parse_with_docling(self, path: str) -> str:
-        converter = self.docling_converter
-        if converter is None:
-            logger.warning("Docling unavailable, falling back to MarkItDown")
-            return self._parse_with_markitdown(path)
-        result = converter.convert(path)
-        return result.document.export_to_markdown()
+    def _parse_xlsx(self, path: str) -> str:
+        try:
+            import pandas as pd
+            df = pd.read_excel(path)
+            return df.to_markdown(index=False)
+        except Exception as e:
+            logger.error(f"Failed to parse XLSX {path}: {e}")
+            return f"[XLSX File: {Path(path).name}]"
 
     def _parse_image(self, path: str) -> str:
-        try:
-            result = self.markitdown.convert(path)
-            if result and result.text_content.strip():
-                return result.text_content
-        except Exception:
-            pass
-
         try:
             from PIL import Image
             img = Image.open(path)
             return f"![{Path(path).stem}]({path})\n\nImage: {Path(path).name}, Size: {img.size[0]}x{img.size[1]}"
         except Exception as e:
             return f"[Image: {Path(path).name}] (Error: {e})"
+
+    def _parse_html(self, path: str) -> str:
+        try:
+            from bs4 import BeautifulSoup
+            with open(path, "r", encoding="utf-8") as f:
+                soup = BeautifulSoup(f, "html.parser")
+                return soup.get_text()
+        except Exception as e:
+            logger.warning(f"Failed to parse HTML {path}: {e}")
+            try:
+                return path.read_text(encoding="utf-8")
+            except Exception:
+                return f"[HTML File: {Path(path).name}]"
+
+    def _parse_text_fallback(self, path: str) -> str:
+        try:
+            return path.read_text(encoding="utf-8")
+        except Exception as e:
+            logger.error(f"Failed to parse {path}: {e}")
+            return f"[File: {Path(path).name}]"

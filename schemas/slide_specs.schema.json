@@ -1,0 +1,315 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SlideSpecArray",
+  "description": "幻灯片规格数组 - 规划阶段输出的每张幻灯片的详细内容与意图规范",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/SlideSpec"
+  },
+  "definitions": {
+    "SlideIntent": {
+      "type": "object",
+      "description": "幻灯片意图 - 描述该幻灯片的设计意图和约束",
+      "required": ["slide_type", "content_roles", "density", "must_have"],
+      "additionalProperties": false,
+      "properties": {
+        "slide_type": {
+          "type": "string",
+          "description": "幻灯片类型",
+          "enum": [
+            "cover",
+            "bullet_list",
+            "two_column",
+            "chart",
+            "table",
+            "image_grid",
+            "architecture",
+            "summary",
+            "discussion",
+            "method",
+            "result",
+            "progress",
+            "timeline",
+            "next_step",
+            "background",
+            "related_work",
+            "literature",
+            "system_design",
+            "comparison",
+            "highlight",
+            "figure",
+            "data",
+            "appendix",
+            "conclusion",
+            "draft",
+            "wip",
+            "general"
+          ]
+        },
+        "content_roles": {
+          "type": "array",
+          "description": "该幻灯片应承载的内容角色列表",
+          "items": {
+            "type": "string",
+            "enum": [
+              "title",
+              "subtitle",
+              "body",
+              "bullet",
+              "caption",
+              "footer",
+              "header",
+              "image",
+              "chart",
+              "table",
+              "diagram",
+              "note",
+              "quote",
+              "metric",
+              "timeline",
+              "comparison",
+              "code"
+            ]
+          }
+        },
+        "density": {
+          "type": "string",
+          "description": "内容密度级别",
+          "enum": ["sparse", "medium", "dense"]
+        },
+        "preferred_layout": {
+          "type": ["string", "null"],
+          "description": "首选版式ID，对应TemplateDNA中的LayoutSpec.id"
+        },
+        "must_have": {
+          "type": "array",
+          "description": "该幻灯片必须包含的元素角色列表",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SlideElementSpec": {
+      "type": "object",
+      "description": "幻灯片元素规格 - 描述幻灯片中一个内容元素的详细规范",
+      "required": ["role", "content", "asset_ids", "required", "visual_weight"],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": "string",
+          "description": "元素在幻灯片中的角色",
+          "enum": [
+            "title",
+            "subtitle",
+            "body",
+            "bullet",
+            "caption",
+            "footer",
+            "header",
+            "image",
+            "chart",
+            "table",
+            "diagram",
+            "note",
+            "quote",
+            "metric",
+            "timeline",
+            "comparison",
+            "code"
+          ]
+        },
+        "content": {
+          "description": "元素内容，可以是纯文本字符串或结构化字典",
+          "oneOf": [
+            {"type": "string"},
+            {"type": "object"}
+          ]
+        },
+        "asset_ids": {
+          "type": "array",
+          "description": "关联的资产ID列表，引用AssetStore中的资产",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required": {
+          "type": "boolean",
+          "description": "该元素是否为必需元素（缺失则视为错误）"
+        },
+        "visual_weight": {
+          "type": "integer",
+          "description": "视觉权重，数值越大表示该元素在布局中越重要",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "ChartIntent": {
+      "type": "object",
+      "description": "图表意图 - 描述幻灯片中图表的生成意图和数据映射",
+      "required": ["intent_type", "title", "data_asset_ids", "y_fields", "fallback"],
+      "additionalProperties": false,
+      "properties": {
+        "intent_type": {
+          "type": "string",
+          "description": "图表意图类型",
+          "enum": [
+            "comparison",
+            "trend",
+            "distribution",
+            "composition",
+            "correlation",
+            "ranking",
+            "deviation",
+            "flow"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "图表标题"
+        },
+        "data_asset_ids": {
+          "type": "array",
+          "description": "关联的数据资产ID列表，引用AssetStore.tables中的资产",
+          "items": {
+            "type": "string"
+          }
+        },
+        "x_field": {
+          "type": ["string", "null"],
+          "description": "X轴字段名"
+        },
+        "y_fields": {
+          "type": "array",
+          "description": "Y轴字段名列表",
+          "items": {
+            "type": "string"
+          }
+        },
+        "group_field": {
+          "type": ["string", "null"],
+          "description": "分组字段名（用于多系列图表）"
+        },
+        "highlight": {
+          "type": ["string", "null"],
+          "description": "需要高亮显示的数据点或系列"
+        },
+        "preferred_chart_type": {
+          "type": ["string", "null"],
+          "description": "首选图表类型",
+          "enum": [
+            "bar",
+            "stacked_bar",
+            "grouped_bar",
+            "line",
+            "area",
+            "stacked_area",
+            "pie",
+            "doughnut",
+            "scatter",
+            "bubble",
+            "radar",
+            "heatmap",
+            "box",
+            "violin",
+            "waterfall",
+            "funnel",
+            "treemap",
+            null
+          ]
+        },
+        "fallback": {
+          "type": "string",
+          "description": "当首选图表类型不可用时的回退图表类型",
+          "enum": [
+            "bar",
+            "line",
+            "pie",
+            "table_as_text",
+            ""
+          ]
+        }
+      }
+    },
+    "SlideSpec": {
+      "type": "object",
+      "description": "幻灯片规格 - 描述一张幻灯片的完整规划信息",
+      "required": ["id", "slide_type", "title", "message", "elements", "intent", "candidate_layout_ids", "speaker_notes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "幻灯片唯一标识"
+        },
+        "slide_type": {
+          "type": "string",
+          "description": "幻灯片类型",
+          "enum": [
+            "cover",
+            "bullet_list",
+            "two_column",
+            "chart",
+            "table",
+            "image_grid",
+            "architecture",
+            "summary",
+            "discussion",
+            "method",
+            "result",
+            "progress",
+            "timeline",
+            "next_step",
+            "background",
+            "related_work",
+            "literature",
+            "system_design",
+            "comparison",
+            "highlight",
+            "figure",
+            "data",
+            "appendix",
+            "conclusion",
+            "draft",
+            "wip",
+            "general"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "幻灯片标题"
+        },
+        "message": {
+          "type": "string",
+          "description": "该幻灯片要传达的核心信息（一句话）"
+        },
+        "elements": {
+          "type": "array",
+          "description": "幻灯片内容元素列表",
+          "items": {
+            "$ref": "#/definitions/SlideElementSpec"
+          }
+        },
+        "intent": {
+          "$ref": "#/definitions/SlideIntent",
+          "description": "幻灯片设计意图"
+        },
+        "candidate_layout_ids": {
+          "type": "array",
+          "description": "候选版式ID列表，按优先级排序",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected_layout_id": {
+          "type": ["string", "null"],
+          "description": "最终选定的版式ID"
+        },
+        "speaker_notes": {
+          "type": "string",
+          "description": "演讲者备注"
+        }
+      }
+    }
+  }
+}
