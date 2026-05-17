@@ -4,133 +4,217 @@
 
 ### 组会PPT自动制作智能体
 
-**From any document to a polished, template-compliant PPTX in minutes**
+**From any document to a polished, template-compliant PPTX — no LLM API required**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[English](#-overview) · [中文](#-概述)
+[English](#-features) · [中文](#-核心特性)
 
 </div>
 
 ***
 
-## 🌟 Overview
+## ✨ Features
 
-**Group Meeting PPT Agent** is an intelligent PPT generation tool designed for academic group meeting scenarios. It takes any format of input documents (PDF, Word, Markdown, images, Excel, etc.), strictly follows your lab's PPTX template, and outputs a native, editable PPTX file.
-
-### Key Features
-
-| Feature                           | Description                                                                                      |
-| --------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 🎨 **Strict Template Compliance** | Template DNA extraction via OOXML deep parsing — colors, fonts, layouts, and decorative elements |
-| 📄 **Universal Input**            | Supports PDF/DOCX/Markdown/Text/Images/Excel and mixed formats                                   |
-| ✏️ **Native Editable Output**     | Produces real `.pptx` files where every element is directly editable in PowerPoint               |
-| 🤖 **Multi-Agent Pipeline**       | Planner → Generator → Refiner → Validator with LLM + rule-based dual mode                        |
-| 📊 **Smart Charts**               | 8 chart types with automatic template color adaptation                                           |
-| ✅ **3-Level Validation**          | Layout overflow/overlap → Template compliance → Content completeness                             |
+| Feature | Description |
+| ------- | ----------- |
+| 🧬 **Template DNA Extraction** | OOXML deep parsing of master / layout / placeholder / decoration — full design spec in one pass |
+| 📐 **Layout-Driven Rendering** | Zero hardcoded coordinates; content binds to template placeholders via semantic matching |
+| 🏗️ **Semantic Asset Layer** | Structured intermediate representation: ContentUnit / Evidence / TableAsset / FigureAsset / CodeAsset / MetricAsset |
+| 🔍 **Smart File Recognition** | 40+ extensions, 20 naming patterns — auto-detect file type, PPT purpose, and sequence |
+| 🤖 **AI 编程助手 Native** | SKILL.md + pure tool scripts + JSON contracts — works with Claude Code / Trae / Cursor, no LLM API calls |
+| 🛡️ **4-Level Validation + Auto-Repair** | Structure → Layout → Compliance → Content, with up to 3 automatic repair rounds |
+| 📊 **Density Control** | Auto split dense slides, compress verbose bullets, merge sparse slides |
 
 ***
 
-## 🌟 概述
+## ✨ 核心特性
 
-**组会PPT智能体**是一款面向科研组会场景的PPT自动制作工具，支持任意格式的过程文件输入，严格遵循用户提供的实验室模板，输出原生可编辑的PPTX。
-
-### 核心卖点
-
-| 卖点             | 说明                                                  |
-| -------------- | --------------------------------------------------- |
-| 🎨 **严格遵循模板**  | 模板DNA提取技术，从OOXML深度解析配色、字体、布局、装饰元素                   |
-| 📄 **任意文件都能吃** | 支持PDF/Word/Markdown/纯文本/图片/Excel等混合格式               |
-| ✏️ **原生可编辑**   | 输出真实PPTX，每个元素都可在PowerPoint中直接编辑                     |
-| 🤖 **多智能体协作**  | Planner → Generator → Refiner → Validator，LLM+规则双模式 |
-| 📊 **智能图表**    | 8种图表类型，自动适配模板配色                                     |
-| ✅ **三级验证**     | 布局溢出/重叠 → 模板合规 → 内容完整性                              |
+| 特性 | 说明 |
+| ---- | ---- |
+| 🧬 **模板DNA提取** | OOXML深度解析母版/版式/占位符/装饰元素，一次提取完整设计规范 |
+| 📐 **布局驱动渲染** | 零硬编码坐标，内容通过语义匹配绑定到模板占位符 |
+| 🏗️ **语义资产层** | 结构化中间表示：ContentUnit / Evidence / TableAsset / FigureAsset / CodeAsset / MetricAsset |
+| 🔍 **智能文件识别** | 40+扩展名、20命名模式——自动检测文件类型、PPT用途和序号 |
+| 🤖 **AI IDE原生集成** | SKILL.md + 纯工具脚本 + JSON契约——适配Claude Code / Trae / Cursor，无需LLM API调用 |
+| 🛡️ **四级验证 + 自动修复** | 结构 → 布局 → 合规 → 内容，最多3轮自动修复 |
+| 📊 **密度控制** | 自动拆分过密幻灯片、压缩冗长要点、合并稀疏页面 |
 
 ***
 
-## 🏗️ Technical Architecture / 技术架构
+## 🏗️ Architecture / 技术架构
 
-### Five-Layer Architecture / 五层架构
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                        System Architecture                        │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Input Layer / 输入层                                      │   │
-│  │  PDF/DOCX/MD/TXT/PNG/XLSX + Template PPTX (opt) + Config │   │
-│  └──────────────────────────┬───────────────────────────────┘   │
-│                             ↓                                     │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Parsing Layer / 解析层                                    │   │
-│  │  ┌──────────────────┐  ┌──────────────────────────┐      │   │
-│  │  │ Document Parser   │  │ Template DNA Extractor   │      │   │
-│  │  │ MarkItDown/Docling│  │ OOXML Deep Parse         │      │   │
-│  │  │  → Markdown       │  │  → Theme/Font/Layout     │      │   │
-│  │  └──────────────────┘  └──────────────────────────┘      │   │
-│  │  ┌──────────────────────────────────────────────────┐     │   │
-│  │  │ LLM Content Structuring Engine                    │     │   │
-│  │  │ Markdown → Type Detection → Info Extraction →     │     │   │
-│  │  │ Unified PPT Structure                             │     │   │
-│  │  └──────────────────────────────────────────────────┘     │   │
-│  └──────────────────────────┬───────────────────────────────┘   │
-│                             ↓                                     │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Multi-Agent Layer / 多智能体层                             │   │
-│  │  Planner → Generator → Refiner → Validator               │   │
-│  │  (规划)    (生成)      (优化)      (验证)                  │   │
-│  └──────────────────────────┬───────────────────────────────┘   │
-│                             ↓                                     │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Generation Layer / 生成层                                  │   │
-│  │  python-pptx + matplotlib + Style Lock + Layout Engine    │   │
-│  └──────────────────────────┬───────────────────────────────┘   │
-│                             ↓                                     │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Output Layer / 输出层                                      │   │
-│  │  PPTX (native editable) + Speaker Notes + Quality Report  │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                   │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Four-Phase Workflow / 四阶段工作流
+### Eight-Layer Architecture / 八层架构
 
 ```
-Phase 1: Input & Parsing / 输入与解析
-├── Receive input: documents + template (opt) + config
-├── Universal document parsing: MarkItDown → Markdown
-├── Template DNA extraction: OOXML parsing → TemplateDNA
-└── LLM content structuring: type detection → unified PPT structure
-
-Phase 2: Intelligent Planning / 智能规划
-├── Planner Agent: page allocation, layout selection, chart planning
-└── User confirmation/adjustment of outline ← Key interaction point
-
-Phase 3: Generation & Optimization / 生成与优化
-├── Generator Agent: text generation, chart generation, slide assembly
-├── Refiner Agent: quality check, expression optimization
-└── Style Lock: color mapping, font replacement, decoration replication
-
-Phase 4: Validation & Delivery / 验证与交付
-├── Validator Agent: layout validation, template check, content completeness
-├── Auto-fix (up to 3 rounds)
-└── Output: PPTX + Speaker Notes + Quality Report
+┌──────────────────────────────────────────────────────────────────────────┐
+│                           System Architecture                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 1. Input Layer / 输入层                                            │  │
+│  │    PDF / DOCX / MD / TXT / PNG / XLSX / PY / BIB + Template PPTX  │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 2. File Recognition Layer / 文件识别层                              │  │
+│  │    SmartFileRecognizer: 40+ exts, 20 naming patterns               │  │
+│  │    → FileRecognitionResult (type, purpose, sequence, confidence)   │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 3. Parsing Layer / 解析层                                          │  │
+│  │    UniversalDocumentParser (MarkItDown / Docling) → Markdown       │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 4. Semantic Asset Layer / 语义资产层                                │  │
+│  │    AssetBuilder → AssetStore                                       │  │
+│  │    ContentUnit · Evidence · TableAsset · FigureAsset               │  │
+│  │    CodeAsset · MetricAsset                                         │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 5. Planning Layer / 规划层                                         │  │
+│  │    Planner (rule-based) → SlideSpec[]                              │  │
+│  │    DensityController: auto split / compress / merge                │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 6. Template Layout Layer / 模板布局层                               │  │
+│  │    OOXMLTemplateParser → TemplateDNA                               │  │
+│  │    LayoutClassifier · LayoutMatcher · PlaceholderBinder            │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 7. Rendering Layer / 渲染层                                        │  │
+│  │    LayoutDrivenRenderer: layout-driven, zero hardcoded coords      │  │
+│  │    python-pptx + matplotlib + Style Lock                           │  │
+│  └──────────────────────────────┬─────────────────────────────────────┘  │
+│                                 ↓                                        │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │ 8. Validation & Repair Layer / 验证与修复层                         │  │
+│  │    VisualValidator (4 levels) → QualityReporter (A/B/C/D)          │  │
+│  │    Auto-fix up to 3 rounds                                         │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Unified Narrative Structure / 统一叙事结构
-
-All document types share the same framework / 所有文档类型共用同一套框架：
+### Pipeline Flow / 流水线流程
 
 ```
-Page 1     Cover       Title + Author + Date / 封面
-Page 2     Overview    Core content in one page / 概述
-Page 3~N   Body        Auto-split by document logic (3-8 pages) / 主体
-Page N+1   Summary     Key findings/conclusions / 总结
-Page N+2   Discussion  Next steps / open questions / 讨论
+Input Layer → File Recognition Layer → Parsing Layer → Semantic Asset Layer
+    → Planning Layer → Template Layout Layer → Rendering Layer
+    → Validation & Repair Layer → PPTX + Quality Report
+```
+
+***
+
+## 🚀 Quick Start / 快速开始
+
+### Prerequisites / 前置条件
+
+- Python 3.10+
+- pip
+
+### Installation / 安装
+
+```bash
+git clone https://github.com/YOUR_USERNAME/group-meeting-ppt-agent.git
+cd group-meeting-ppt-agent
+pip install -r requirements.txt
+```
+
+### Basic Usage / 基本用法
+
+```bash
+python -m src.agent experiment.md -t lab_template.pptx -a "张三"
+```
+
+***
+
+## 📖 CLI Usage / 命令行用法
+
+### Main Command / 主命令
+
+```bash
+python -m src.agent <files> -t <template> -a <author>
+
+# Examples / 示例
+python -m src.agent paper.pdf -t lab_template.pptx -a "张三"
+python -m src.agent experiment.md data.xlsx fig.png -t template.pptx -a "Li Ming"
+python -m src.agent notes.md --outline-only -a "王五"
+```
+
+| Parameter | Description | Default |
+| --------- | ----------- | ------- |
+| `input_files` | Input file paths (positional, required) | - |
+| `-t, --template` | Template PPTX path | None |
+| `-a, --author` | Presenter name | "" |
+| `-d, --date` | Date string | auto |
+| `-o, --output-dir` | Output directory | `./output` |
+| `--outline-only` | Only print outline, don't generate PPTX | False |
+
+### Individual Tool Scripts / 独立工具脚本
+
+Each step can be invoked independently via JSON contracts / 每一步均可通过JSON契约独立调用：
+
+```bash
+# Step 1: Recognize file types / 文件识别
+python -m src.tools.recognize_files paper.pdf data.xlsx --output recognition.json
+
+# Step 2: Parse documents / 文档解析
+python -m src.tools.parse_documents paper.pdf --output parsed.json
+
+# Step 3: Extract template DNA / 模板DNA提取
+python -m src.tools.extract_template_dna lab_template.pptx --output template_dna.json
+
+# Step 4: Build asset store / 构建资产库
+python -m src.tools.build_asset_store --recognition recognition.json --parsed parsed.json --output asset_store.json
+
+# Step 5: Render PPTX / 渲染PPTX
+python -m src.tools.render_pptx --slide-specs slide_specs.json --template-dna template_dna.json --output result.pptx
+
+# Step 6: Validate PPTX / 验证PPTX
+python -m src.tools.validate_pptx result.pptx --template-dna template_dna.json --output report.json
+
+# Step 7: Repair PPTX / 修复PPTX
+python -m src.tools.repair_pptx --pptx result.pptx --issues report.json --output repaired.pptx
+```
+
+***
+
+## 🤖 AI IDE Integration / AI IDE集成
+
+The project ships with `skills/group-meeting-ppt-agent/SKILL.md` — a declarative skill definition that tells AI IDEs (Claude Code, Trae, Cursor) how to orchestrate the pipeline.
+
+项目自带 `skills/group-meeting-ppt-agent/SKILL.md`——声明式技能定义，指导AI IDE编排流水线。
+
+### How it works / 工作原理
+
+1. AI IDE reads `SKILL.md` to understand the pipeline and constraints
+2. AI IDE calls **pure tool scripts** (no LLM API calls inside) via CLI
+3. Data flows between steps via **JSON contracts** (`schemas/*.schema.json`)
+4. AI IDE handles high-level decisions (planning, refinement) while tools handle deterministic work
+
+### Key constraints / 核心约束
+
+- Tool scripts **never** call OpenAI / Anthropic API
+- No hardcoded PPT coordinates unless template has no usable layout
+- Must call validation tool after rendering
+- Auto-repair up to 3 rounds on failure
+
+### Usage with Claude Code / Trae / Cursor
+
+```
+# In your AI IDE, point to the skill:
+/skills/group-meeting-ppt-agent
+
+# Then ask:
+"用 lab_template.pptx 把 experiment.md 做成组会PPT"
 ```
 
 ***
@@ -144,335 +228,173 @@ group-meeting-ppt-agent/
 ├── setup.py
 ├── LICENSE
 │
+├── schemas/                          # JSON Schema contracts / JSON契约
+│   ├── asset_store.schema.json
+│   ├── file_recognition.schema.json
+│   ├── render_log.schema.json
+│   ├── shared_state.schema.json
+│   ├── slide_spec.schema.json
+│   ├── slide_specs.schema.json
+│   ├── template_dna.schema.json
+│   └── validation_report.schema.json
+│
+├── skills/                           # AI IDE skill definitions / AI IDE技能定义
+│   └── group-meeting-ppt-agent/
+│       ├── SKILL.md                  # Skill manifest / 技能清单
+│       ├── constraints.md            # Constraints / 约束
+│       ├── prompts/
+│       │   ├── planning_prompt.md
+│       │   └── refinement_prompt.md
+│       └── examples/
+│           ├── experiment_log_to_ppt.md
+│           ├── literature_note_to_ppt.md
+│           └── progress_report_to_ppt.md
+│
 ├── src/
 │   ├── __init__.py
-│   ├── agent.py                  # Main entry / 主入口
-│   ├── models.py                 # Data models / 数据模型
+│   ├── agent.py                      # Main entry (8-step pipeline) / 主入口
+│   ├── models.py                     # Legacy models (compat) / 旧模型(兼容)
 │   │
-│   ├── parsers/
+│   ├── common/                       # Shared models & utilities / 共享模型与工具
 │   │   ├── __init__.py
-│   │   ├── document_parser.py    # Universal document parser / 通用文档解析
-│   │   ├── template_extractor.py # Template DNA extractor / 模板DNA提取
-│   │   └── content_structurer.py # LLM content structuring / LLM内容结构化
+│   │   ├── models.py                 # All data classes / 全部数据类
+│   │   └── json_io.py               # JSON read/write helpers / JSON读写
 │   │
-│   ├── agents/
+│   ├── recognition/                  # Layer 2: File Recognition / 文件识别层
 │   │   ├── __init__.py
-│   │   ├── planner.py            # Planning agent / 规划智能体
-│   │   ├── generator.py          # Generation agent / 生成智能体
-│   │   ├── refiner.py            # Refinement agent / 优化智能体
-│   │   └── validator.py          # Validation agent / 验证智能体
+│   │   └── file_recognizer.py       # SmartFileRecognizer
 │   │
-│   ├── generators/
+│   ├── parsers/                      # Layer 3: Document Parsing / 文档解析层
 │   │   ├── __init__.py
-│   │   ├── pptx_builder.py       # PPTX builder / PPTX构建器
-│   │   ├── chart_generator.py    # Chart generator / 图表生成器
-│   │   ├── style_lock.py         # Style lock engine / 样式锁定引擎
-│   │   └── layout_engine.py      # Layout engine / 布局引擎
+│   │   ├── document_parser.py       # UniversalDocumentParser
+│   │   ├── template_extractor.py    # Template DNA extractor (legacy)
+│   │   └── content_structurer.py    # Content structurer (legacy)
 │   │
-│   ├── validators/
+│   ├── assets/                       # Layer 4: Semantic Asset / 语义资产层
 │   │   ├── __init__.py
-│   │   ├── layout_validator.py   # Layout validation (L1) / 布局验证
-│   │   ├── compliance_checker.py # Compliance check (L2) / 合规检查
-│   │   └── content_checker.py    # Content check (L3) / 内容检查
+│   │   └── asset_builder.py         # AssetBuilder → AssetStore
 │   │
+│   ├── planning/                     # Layer 5: Planning / 规划层
+│   │   ├── __init__.py
+│   │   └── density_controller.py    # DensityController (split/compress/merge)
+│   │
+│   ├── template/                     # Layer 6: Template Layout / 模板布局层
+│   │   ├── __init__.py
+│   │   ├── ooxml_parser.py          # OOXMLTemplateParser → TemplateDNA
+│   │   └── layout_classifier.py     # classify_layout()
+│   │
+│   ├── rendering/                    # Layer 7: Rendering / 渲染层
+│   │   ├── __init__.py
+│   │   ├── pptx_renderer.py         # LayoutDrivenRenderer
+│   │   ├── layout_matcher.py        # LayoutMatcher
+│   │   └── placeholder_binder.py    # PlaceholderBinder
+│   │
+│   ├── validation/                   # Layer 8: Validation & Repair / 验证与修复层
+│   │   ├── __init__.py
+│   │   ├── visual_validator.py      # VisualValidator (4-level)
+│   │   └── quality_reporter.py      # QualityReporter (A/B/C/D grade)
+│   │
+│   ├── tools/                        # CLI tool scripts / 独立工具脚本
+│   │   ├── __init__.py
+│   │   ├── recognize_files.py
+│   │   ├── parse_documents.py
+│   │   ├── extract_template_dna.py
+│   │   ├── build_asset_store.py
+│   │   ├── render_pptx.py
+│   │   ├── validate_pptx.py
+│   │   └── repair_pptx.py
+│   │
+│   ├── agents/                       # Agent modules (legacy) / 智能体模块(兼容)
+│   ├── generators/                   # Generator modules (legacy) / 生成模块(兼容)
+│   ├── validators/                   # Validator modules (legacy) / 验证模块(兼容)
 │   └── templates/
-│       ├── create_template.py    # Template generator / 模板生成脚本
-│       └── default_academic.pptx # Default template / 默认学术模板
+│       ├── create_template.py
+│       └── default_academic.pptx
 │
 └── tests/
-    └── test_all.py               # Test suite / 测试套件
+    └── test_all.py
 ```
 
 ***
 
-## 🚀 Installation / 安装
+## 📋 JSON Contracts / JSON契约
 
-### Prerequisites / 前置条件
+All inter-layer data is governed by JSON Schema files in `schemas/`:
 
-- Python 3.10+
-- pip
+所有层间数据均由 `schemas/` 中的JSON Schema约束：
 
-### Quick Install / 快速安装
-
-```bash
-# Clone the repository / 克隆仓库
-git clone https://github.com/YOUR_USERNAME/group-meeting-ppt-agent.git
-cd group-meeting-ppt-agent
-
-# Install dependencies / 安装依赖
-pip install -r requirements.txt
-```
-
-### Dependencies / 依赖说明
-
-| Package       | Purpose                                        |
-| ------------- | ---------------------------------------------- |
-| `python-pptx` | PPTX read/write and OOXML manipulation         |
-| `matplotlib`  | Chart rendering with template color adaptation |
-| `pandas`      | Table data processing                          |
-| `Pillow`      | Image processing                               |
-| `openai`      | LLM API integration (optional)                 |
-| `lxml`        | XML parsing for OOXML deep extraction          |
-| `markitdown`  | Universal document → Markdown conversion       |
-
-### Optional Dependencies / 可选依赖
-
-```bash
-# For complex PDF parsing / 复杂PDF深度解析
-pip install docling
-
-# For development / 开发环境
-pip install pytest pytest-cov
-```
+| Schema | Description | 说明 |
+| ------ | ----------- | ---- |
+| `file_recognition.schema.json` | File recognition results | 文件识别结果 |
+| `asset_store.schema.json` | Semantic asset store | 语义资产库 |
+| `template_dna.schema.json` | Template DNA specification | 模板DNA规范 |
+| `slide_spec.schema.json` | Single slide specification | 单页幻灯片规范 |
+| `slide_specs.schema.json` | Slide specification collection | 幻灯片规范集合 |
+| `shared_state.schema.json` | Pipeline shared state | 流水线共享状态 |
+| `render_log.schema.json` | Rendering log | 渲染日志 |
+| `validation_report.schema.json` | Validation & quality report | 验证与质量报告 |
 
 ***
 
-## 📖 Usage / 使用方法
+## 📊 Quality Report / 质量报告
 
-### Command Line / 命令行
+Example output / 输出示例：
 
-```bash
-# Basic usage (rule-based, no LLM) / 基本用法（规则引擎，无需LLM）
-python -m src.agent input.md --skip-llm -a "Author Name" -o ./output
-
-# With template / 使用模板
-python -m src.agent input.pdf -t lab_template.pptx --skip-llm -a "张三"
-
-# With LLM (requires API key) / 使用LLM（需要API Key）
-python -m src.agent input.md --api-key sk-xxx --model gpt-4o -a "张三"
-
-# Preview outline only / 仅预览大纲
-python -m src.agent input.md --outline-only --skip-llm
-
-# Multiple input files / 多文件输入
-python -m src.agent experiment.md data.xlsx notes.md --skip-llm -a "张三"
-```
-
-### Python API / Python接口
-
-```python
-from src.agent import GroupMeetingPPTAgent, GenerationConfig
-
-# Configure / 配置
-config = GenerationConfig(
-    author="张三",
-    date="2025-01-01",
-    output_dir="./output",
-    template_path="lab_template.pptx",  # optional
-    skip_llm=True,                       # use rule-based engine
-)
-
-# Create agent and generate / 创建智能体并生成
-agent = GroupMeetingPPTAgent(config=config)
-
-# Preview outline / 预览大纲
-outline = agent.get_outline(["experiment.md"])
-print(agent.format_outline(outline))
-
-# Generate PPTX / 生成PPTX
-result = agent.generate(["experiment.md"], config)
-print(f"Output: {result.pptx_path}")
-print(f"Pages: {len(result.presentation.slides)}")
-print(f"Template compliance: {result.compliance.overall_score:.0%}")
-```
-
-### CLI Parameters / 命令行参数
-
-| Parameter          | Description                             | Default    |
-| ------------------ | --------------------------------------- | ---------- |
-| `input_files`      | Input file paths (positional, required) | -          |
-| `-t, --template`   | Template PPTX path                      | None       |
-| `-a, --author`     | Presenter name                          | ""         |
-| `-d, --date`       | Date string                             | auto       |
-| `-o, --output-dir` | Output directory                        | `./output` |
-| `--api-key`        | OpenAI API key                          | None       |
-| `--model`          | LLM model name                          | `gpt-4o`   |
-| `--skip-llm`       | Skip LLM, use rule-based only           | False      |
-| `--outline-only`   | Only print outline, don't generate PPTX | False      |
-
-***
-
-## 🧩 Core Modules / 核心模块
-
-### 1. Universal Document Parser / 通用文档解析器
-
-Smart routing between MarkItDown and Docling / MarkItDown与Docling智能路由：
-
-- **Default**: MarkItDown (fast, broad format support)
-- **Auto-switch to Docling**: When PDF > 5MB or table count > 5
-- **Supported formats**: PDF, DOCX, XLSX, PPTX, MD, TXT, CSV, JSON, HTML, PNG, JPG, BMP, TIFF
-
-### 2. Template DNA Extractor / 模板DNA提取引擎
-
-Deep OOXML parsing to extract complete design specifications / OOXML深度解析提取完整设计规范：
-
-- **Theme Colors**: From `theme1.xml` clrScheme (accent1-6, bg1-2, tx1-2)
-- **Font Hierarchy**: majorFont/minorFont with Latin + East Asian support
-- **Layout Structures**: Slide layout placeholder positions and types
-- **Decorations**: Logo, header/footer elements, divider lines
-- **Media**: All embedded media resources
-
-### 3. Multi-Agent Pipeline / 多智能体协作
-
-```
-┌────────────┐    ┌────────────┐    ┌────────────┐    ┌────────────┐
-│  Planner   │───→│ Generator  │───→│  Refiner   │───→│ Validator  │
-│            │    │            │    │            │    │            │
-│ ·Page plan │    │ ·Text gen  │    │ ·Quality   │    │ ·Layout    │
-│ ·Layout    │    │ ·Chart gen │    │ ·Optimize  │    │ ·Template  │
-│ ·Chart     │    │ ·Assembly  │    │ ·Unify     │    │ ·Content   │
-│ ·Confirm   │    │ ·Style     │    │ ·Trim      │    │ ·Score     │
-└────────────┘    └────────────┘    └────────────┘    └────────────┘
-```
-
-Each agent supports **LLM mode** (with API key) and **rule-based mode** (without LLM).
-
-### 4. Chart Generator / 图表生成器
-
-8 chart types with automatic template color adaptation / 8种图表类型，自动适配模板配色：
-
-| Chart                  | Use Case                               |
-| ---------------------- | -------------------------------------- |
-| `comparison_table`     | Highlighted comparison tables          |
-| `progress_chart`       | Milestone visualization                |
-| `metric_dashboard`     | Big-number KPI display                 |
-| `timeline`             | Chronological events                   |
-| `sota_comparison`      | State-of-the-art horizontal bar chart  |
-| `ablation_chart`       | Ablation study with baseline highlight |
-| `training_curves`      | Multi-line training metrics            |
-| `architecture_diagram` | Pipeline/architecture flow diagram     |
-
-### 5. Style Lock Engine / 样式锁定引擎
-
-Ensures generated PPTX strictly follows template DNA / 确保生成PPT严格遵循模板DNA：
-
-- **Color Remapping**: Non-compliant colors → template palette
-- **Font Replacement**: Title/body font hierarchy enforcement
-- **Dimension Calibration**: Overflow prevention and boundary correction
-- **Decoration Replication**: Logo, footer, divider line reproduction
-
-### 6. 3-Level Validation / 三级验证
-
-| Level   | Validation                                         | Pass Condition |
-| ------- | -------------------------------------------------- | -------------- |
-| Level 1 | Layout (overflow/overlap/blank)                    | Issues = 0     |
-| Level 2 | Template compliance (color/font/layout/decoration) | Score ≥ 90%    |
-| Level 3 | Content (placeholder/completeness/structure)       | No P0 issues   |
-
-***
-
-## 📊 Supported Slide Layouts / 支持的幻灯片布局
-
-| Layout         | Description                                |
-| -------------- | ------------------------------------------ |
-| `cover`        | Title slide with author, date, accent line |
-| `bullet_list`  | Standard bullet point content slide        |
-| `two_column`   | Two-column comparison with divider         |
-| `chart`        | Chart image with caption area              |
-| `table`        | Formatted table with styled headers        |
-| `image_grid`   | Auto-layout image grid (2-8 images)        |
-| `architecture` | Block diagram with arrows                  |
-| `summary`      | Centered title with checkmark points       |
-| `discussion`   | Centered title with arrow points           |
-
-***
-
-## 🧪 Testing / 测试
-
-```bash
-# Run all tests / 运行所有测试
-python tests/test_all.py
-
-# Test coverage / 测试覆盖
-# - Models (12 data classes)
-# - Document Parser (MD/TXT parsing)
-# - Content Structurer (fallback mode)
-# - Planner (rule-based)
-# - Refiner (text trimming, dedup)
-# - Validator (structure validation)
-# - PPTX Builder (6-slide generation)
-# - Chart Generator (bar + SOTA chart)
-# - Layout Engine (9 layout types)
-# - End-to-end flow (full pipeline)
-```
-
-***
-
-## 🛠️ Tech Stack / 技术栈
-
-| Module           | Technology  | Purpose                               |
-| ---------------- | ----------- | ------------------------------------- |
-| Document Parsing | MarkItDown  | Universal format → Markdown (default) |
-| Document Parsing | Docling     | Complex PDF deep parsing (fallback)   |
-| Template/PPT     | python-pptx | PPTX read/write, OOXML manipulation   |
-| Charts           | matplotlib  | Data chart rendering                  |
-| LLM              | OpenAI API  | Content structuring & optimization    |
-| Data             | pandas      | Table data processing                 |
-| Image            | Pillow      | Image processing & OCR                |
-| XML              | lxml        | OOXML deep parsing                    |
-
-***
-
-## 📝 Default Theme / 默认主题配色
-
-```python
-DEFAULT_THEME = {
-    "primary": "#1E3A5F",      # Deep Blue / 深蓝
-    "secondary": "#4A6FA5",    # Medium Blue / 中蓝
-    "accent": "#E85D4E",       # Coral Red / 珊瑚红
-    "background": "#F8F9FA",   # Light Gray / 浅灰白
-    "text": "#2C3E50",         # Dark Gray / 深灰
-}
-
-DEFAULT_FONTS = {
-    "title": "Source Han Serif SC",   # 思源宋体
-    "body": "Source Han Sans SC",     # 思源黑体
-    "mono": "Consolas",
+```json
+{
+  "structure_score": 100,
+  "layout_score": 85,
+  "compliance_score": 92,
+  "content_score": 95,
+  "overall_score": 92.4,
+  "grade": "A",
+  "slide_count": 12,
+  "issue_summary": {
+    "total": 3,
+    "by_severity": { "warning": 2, "info": 1 },
+    "by_level": { "layout": 2, "compliance": 1 },
+    "by_type": { "font_mismatch": 1, "margin_violation": 2 }
+  }
 }
 ```
 
-***
+### Grade Scale / 评分等级
 
-## 🤝 Contributing / 贡献
+| Grade | Score Range | Meaning |
+| ----- | ----------- | ------- |
+| **A** | ≥ 85 | Excellent — ready to present / 优秀——可直接使用 |
+| **B** | 70 – 84 | Good — minor issues / 良好——有小问题 |
+| **C** | 60 – 69 | Acceptable — needs review / 及格——需检查 |
+| **D** | < 60 | Poor — requires rework / 不及格——需返工 |
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### 4-Level Validation / 四级验证
 
-欢迎贡献代码！请随时提交 Pull Request。
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-***
-
-## 📄 License / 许可证
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-本项目基于 MIT 许可证开源，详见 [LICENSE](LICENSE) 文件。
+| Level | Validation | Pass Condition |
+| ----- | ---------- | -------------- |
+| Structure | Blank slides, missing titles, slide count | Issues = 0 |
+| Layout | Overflow, overlap, margin violation, font size | No critical/error |
+| Compliance | Font mismatch, color mismatch vs template DNA | Score ≥ 90% |
+| Content | Placeholder text, incomplete content | No P0 issues |
 
 ***
 
 ## 🙏 Acknowledgments / 致谢
 
-| Project                                                        | Contribution                             |
-| -------------------------------------------------------------- | ---------------------------------------- |
-| [ppt-master](https://github.com/hugohe3/ppt-master)            | Template DNA extraction, SVG→native PPTX |
-| [MarkItDown](https://github.com/microsoft/markitdown)          | Universal document → Markdown conversion |
-| [Docling](https://github.com/docling-project/docling)          | Complex PDF deep parsing                 |
-| [Auto-Slides](https://github.com/Westlake-AGI-Lab/Auto-Slides) | Multi-agent collaboration pattern        |
-| [pptx-generator](https://github.com/paul0728/pptx-generator)   | Slide type schema design                 |
+| Project | Contribution |
+| ------- | ------------ |
+| [ppt-master](https://github.com/hugohe3/ppt-master) | Template DNA extraction, SVG→native PPTX |
+| [MarkItDown](https://github.com/microsoft/markitdown) | Universal document → Markdown conversion |
+| [Docling](https://github.com/docling-project/docling) | Complex PDF deep parsing |
+| [Auto-Slides](https://github.com/Westlake-AGI-Lab/Auto-Slides) | Multi-agent collaboration pattern |
+| [pptx-generator](https://github.com/paul0728/pptx-generator) | Slide type schema design |
 
 ***
 
-## ⚠️ Known Limitations / 已知限制
+## 📄 License / 许可证
 
-- LLM mode requires OpenAI API key (or compatible API)
-- Complex template decorations may not be perfectly replicated
-- Architecture diagram is block-based; complex diagrams need manual adjustment
-- Chinese fonts (Source Han) must be installed on the system for correct rendering
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+本项目基于 MIT 许可证开源，详见 [LICENSE](LICENSE) 文件。
 
 ***
 
