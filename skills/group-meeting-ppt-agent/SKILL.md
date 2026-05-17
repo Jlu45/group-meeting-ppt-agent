@@ -210,7 +210,7 @@ python -m src.tools.extract_template_dna \
 
 ### 阶段 4：规划与渲染（Planning & Rendering）
 
-**此阶段由 AI IDE 负责**。你需要：
+**此阶段由 AI 编程助手负责**。你需要：
 
 1. 根据解析内容和文件识别结果，使用 `planning_prompt.md` 生成 SlideSpec 数组
 2. 将 SlideSpec、TemplateDNA、AssetStore、UserConstraints 组装为 SharedState JSON
@@ -362,8 +362,8 @@ python -m src.tools.extract_template_dna \
   src/templates/default_academic.pptx \
   --output .cache/template_dna.json
 
-# 阶段 4：AI IDE 规划 SlideSpec → 组装 SharedState → 渲染
-# （AI IDE 根据 planning_prompt.md 生成 slide_specs）
+# 阶段 4：AI 编程助手规划 SlideSpec → 组装 SharedState → 渲染
+# （AI 编程助手根据 planning_prompt.md 生成 slide_specs）
 python -m src.tools.render_pptx \
   --state .cache/shared_state.json \
   --output output/group_meeting.pptx

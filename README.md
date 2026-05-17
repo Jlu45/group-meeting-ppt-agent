@@ -24,7 +24,7 @@
 | 📐 **Layout-Driven Rendering** | Zero hardcoded coordinates; content binds to template placeholders via semantic matching |
 | 🏗️ **Semantic Asset Layer** | Structured intermediate representation: ContentUnit / Evidence / TableAsset / FigureAsset / CodeAsset / MetricAsset |
 | 🔍 **Smart File Recognition** | 40+ extensions, 20 naming patterns — auto-detect file type, PPT purpose, and sequence |
-| 🤖 **AI 编程助手 Native** | SKILL.md + pure tool scripts + JSON contracts — works with Claude Code / Trae / Cursor, no LLM API calls |
+| 🤖 **AI 编程助手原生支持** | SKILL.md + pure tool scripts + JSON contracts — works with Claude Code / Cursor / Trae / Copilot / Qoder, no LLM API calls |
 | 🛡️ **4-Level Validation + Auto-Repair** | Structure → Layout → Compliance → Content, with up to 3 automatic repair rounds |
 | 📊 **Density Control** | Auto split dense slides, compress verbose bullets, merge sparse slides |
 
@@ -38,7 +38,7 @@
 | 📐 **布局驱动渲染** | 零硬编码坐标，内容通过语义匹配绑定到模板占位符 |
 | 🏗️ **语义资产层** | 结构化中间表示：ContentUnit / Evidence / TableAsset / FigureAsset / CodeAsset / MetricAsset |
 | 🔍 **智能文件识别** | 40+扩展名、20命名模式——自动检测文件类型、PPT用途和序号 |
-| 🤖 **AI IDE原生集成** | SKILL.md + 纯工具脚本 + JSON契约——适配Claude Code / Trae / Cursor，无需LLM API调用 |
+| 🤖 **AI编程助手原生集成** | SKILL.md + 纯工具脚本 + JSON契约——适配Claude Code / Trae / Cursor，无需LLM API调用 |
 | 🛡️ **四级验证 + 自动修复** | 结构 → 布局 → 合规 → 内容，最多3轮自动修复 |
 | 📊 **密度控制** | 自动拆分过密幻灯片、压缩冗长要点、合并稀疏页面 |
 
@@ -187,18 +187,18 @@ python -m src.tools.repair_pptx --pptx result.pptx --issues report.json --output
 
 ***
 
-## 🤖 AI IDE Integration / AI IDE集成
+## 🤖 AI Programming Assistant Integration / AI编程助手集成
 
-The project ships with `skills/group-meeting-ppt-agent/SKILL.md` — a declarative skill definition that tells AI IDEs (Claude Code, Trae, Cursor) how to orchestrate the pipeline.
+The project ships with `skills/group-meeting-ppt-agent/SKILL.md` — a declarative skill definition that tells AI 编程助手 (Claude Code, Trae, Cursor) how to orchestrate the pipeline.
 
-项目自带 `skills/group-meeting-ppt-agent/SKILL.md`——声明式技能定义，指导AI IDE编排流水线。
+项目自带 `skills/group-meeting-ppt-agent/SKILL.md`——声明式技能定义，指导AI编程助手编排流水线。
 
 ### How it works / 工作原理
 
-1. AI IDE reads `SKILL.md` to understand the pipeline and constraints
-2. AI IDE calls **pure tool scripts** (no LLM API calls inside) via CLI
+1. AI 编程助手 reads `SKILL.md` to understand the pipeline and constraints
+2. AI 编程助手 calls **pure tool scripts** (no LLM API calls inside) via CLI
 3. Data flows between steps via **JSON contracts** (`schemas/*.schema.json`)
-4. AI IDE handles high-level decisions (planning, refinement) while tools handle deterministic work
+4. AI 编程助手 handles high-level decisions (planning, refinement) while tools handle deterministic work
 
 ### Key constraints / 核心约束
 
@@ -210,7 +210,7 @@ The project ships with `skills/group-meeting-ppt-agent/SKILL.md` — a declarati
 ### Usage with Claude Code / Trae / Cursor
 
 ```
-# In your AI IDE, point to the skill:
+# In your AI 编程助手, point to the skill:
 /skills/group-meeting-ppt-agent
 
 # Then ask:
@@ -238,7 +238,7 @@ group-meeting-ppt-agent/
 │   ├── template_dna.schema.json
 │   └── validation_report.schema.json
 │
-├── skills/                           # AI IDE skill definitions / AI IDE技能定义
+├── skills/                           # AI programming assistant skill definitions / AI编程助手技能定义
 │   └── group-meeting-ppt-agent/
 │       ├── SKILL.md                  # Skill manifest / 技能清单
 │       ├── constraints.md            # Constraints / 约束

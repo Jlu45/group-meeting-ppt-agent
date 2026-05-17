@@ -5,7 +5,7 @@
 ### 1. 禁止LLM API调用
 - 所有工具脚本（`src/tools/` 目录下）不得调用任何LLM API（包括OpenAI、Anthropic、本地模型等）
 - 幻灯片规划必须使用规则引擎，不得依赖LLM生成内容
-- 如需LLM增强，仅允许在 `skills/group-meeting-ppt-agent/prompts/` 中提供提示词模板，由AI IDE在独立步骤中调用
+- 如需LLM增强，仅允许在 `skills/group-meeting-ppt-agent/prompts/` 中提供提示词模板，由AI编程助手在独立步骤中调用
 
 ### 2. 禁止硬编码PPT坐标
 - 除非无模板布局可用（即 `template_dna.layouts` 为空），否则不得在渲染代码中硬编码任何PPT坐标
@@ -68,7 +68,7 @@
 - 所有中间JSON文件必须保存到输出目录下的 `.cache/` 子目录
 - JSON文件使用 UTF-8 编码，`ensure_ascii=False`
 - 每个JSON文件必须符合 `schemas/` 目录下对应的JSON Schema
-- AI IDE可通过读取 `.cache/` 中的文件进行增量编辑和调试
+- AI编程助手可通过读取 `.cache/` 中的文件进行增量编辑和调试
 
 ## 代码规范
 

@@ -107,4 +107,4 @@ python -m src.tools.validate_pptx "output/实验记录_张三.pptx" -o output/.c
 | 5 | 总结 | 结论 | kind=claim 的 ContentUnit |
 | 6 | 讨论 | 下一步计划 | kind=next_step 的 ContentUnit |
 
-中间文件保存在 `output/.cache/` 目录下，AI IDE可读取这些文件进行增量编辑。
+中间文件保存在 `output/.cache/` 目录下，AI编程助手可读取这些文件进行增量编辑。
